@@ -14,7 +14,7 @@ export const mockCustomers: Customer[] = [
   {
     id: 'cust-2',
     firstName: 'Beatrice',
-    lastName: 'Vneri',
+    lastName: 'Neri',
     phone: '+39 347 9876543',
     email: 'beatrice.neri@example.com',
     notes: 'Richiesto abito su misura per cerimonia a giugno.',
