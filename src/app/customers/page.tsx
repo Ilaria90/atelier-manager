@@ -1,4 +1,5 @@
 import { getCustomers, addCustomer } from "@/actions/customer"
+import Link from "next/link"
 
 export default async function CustomersPage() {
   // Chiamiamo il nostro "Service" in modo pulito
@@ -47,7 +48,11 @@ export default async function CustomersPage() {
           {customers.map((customer) => (
             <li key={customer.id} className="p-4 border rounded-lg shadow-sm bg-white">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-lg">{customer.name}</h3>
+                <h3 className="font-semibold text-lg">
+  <Link href={`/customers/${customer.id}`} className="hover:underline hover:text-blue-600 cursor-pointer">
+    {customer.name}
+  </Link>
+</h3>
                 {/* Aggiunta la stampa formattata della data */}
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                   Cliente dal: {new Date(customer.createdAt).toLocaleDateString('it-IT')}
