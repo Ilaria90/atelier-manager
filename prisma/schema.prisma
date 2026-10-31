@@ -16,6 +16,7 @@ model Customer {
   updatedAt DateTime @updatedAt
   
   measurements Measurement[]
+  garments     Garment[]  
 }
 
 model Measurement {
@@ -32,4 +33,31 @@ model Measurement {
   notes       String?
   
   createdAt DateTime @default(now())
+}
+enum GarmentStatus {
+  QUOTE       // Preventivo
+  CONFIRMED   // Confermato (con acconto)
+  IN_PROGRESS // In lavorazione
+  FITTING     // In prova
+  FINISHING   // Rifiniture
+  READY       // Pronto
+  DELIVERED   // Consegnato
+  CANCELLED   // Annullato
+}
+
+model Garment {
+  id          String        @id @default(uuid())
+  title       String
+  description String?
+  status      GarmentStatus @default(QUOTE)
+  price       Decimal?      @db.Decimal(10, 2)
+  deposit     Decimal?      @db.Decimal(10, 2)
+  dueDate     DateTime?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relazione con il cliente
+  customerId  String
+  customer    Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
