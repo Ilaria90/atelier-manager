@@ -8,14 +8,12 @@ import { CLOSED_STATUSES } from "@/lib/garment-status"
 // 1. Definiamo le REGOLE d'ingresso con Zod
 const CustomerSchema = z.object({
   name: z.string().min(2, "Il nome deve avere almeno 2 caratteri"),
-  // phone ed email sono opzionali, ma se ci sono, l'email deve avere il formato giusto (@)
   phone: z.string().optional(),
   email: z.union([z.literal(""), z.string().email("Formato email non valido")]).optional(),
   notes: z.string().optional(),
 })
 
 export async function addCustomer(formData: FormData) {
-  // 2. Estraiamo i dati crudi
   const rawData = {
     name: formData.get("name"),
     phone: formData.get("phone"),
@@ -23,7 +21,6 @@ export async function addCustomer(formData: FormData) {
     notes: formData.get("notes"),
   }
 
-  // 3. Zod controlla i dati. Se fallisce, blocca tutto.
   const validatedData = CustomerSchema.safeParse(rawData)
 
   if (!validatedData.success) {
@@ -31,7 +28,6 @@ export async function addCustomer(formData: FormData) {
     return { error: "Dati inseriti non validi." }
   }
 
-  // 4. Se arriviamo qui, i dati sono sicuri al 100%
   await db.customer.create({
     data: {
       name: validatedData.data.name,
@@ -57,7 +53,6 @@ export async function getCustomers() {
   })
 }
 
-// AGGIUNGI QUESTA FUNZIONE CHE MANCAVA:
 export async function updateCustomer(id: string, formData: FormData) {
   const rawData = {
     name: formData.get("name"),
@@ -85,4 +80,18 @@ export async function updateCustomer(id: string, formData: FormData) {
 
   revalidatePath("/customers")
   revalidatePath(`/customers/${id}`)
+}
+
+// AGGIUNGI ANCHE QUESTA PER CANCELLARE IL CLIENTE:
+export async function deleteCustomer(id: string) {
+  try {
+    await db.customer.delete({
+      where: { id },
+    })
+    revalidatePath("/customers")
+    return { success: true }
+  } catch (error) {
+    console.error("Errore durante l'eliminazione del cliente:", error)
+    return { error: "Impossibile eliminare il cliente." }
+  }
 }
