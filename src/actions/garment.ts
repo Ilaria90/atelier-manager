@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-
+import { GarmentStatus } from "@prisma/client" 
 // 1. Funzione per creare un nuovo preventivo/capo
 export async function addGarment(formData: FormData) {
   const customerId = formData.get("customerId") as string
@@ -33,8 +33,7 @@ export async function addGarment(formData: FormData) {
 export async function updateGarmentStatus(formData: FormData) {
   const garmentId = formData.get("garmentId") as string
   const customerId = formData.get("customerId") as string
-  const status = formData.get("status") as any 
-
+const status = formData.get("status") as GarmentStatus
   if (!garmentId || !status) return
 
   await db.garment.update({

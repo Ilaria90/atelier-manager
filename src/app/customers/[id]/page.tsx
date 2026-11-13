@@ -2,6 +2,7 @@ import { db } from "@/lib/prisma"
 import Link from "next/link"
 import { addMeasurement } from "@/actions/measurement"
 import { addGarment, updateGarmentStatus } from "@/actions/garment"
+import { DeleteCustomerButton } from "@/components/DeleteCustomerButton"
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -28,7 +29,15 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
           &larr; Torna alla lista
         </Link>
         <div className="bg-white p-8 rounded-lg shadow-sm border">
-          <h1 className="text-3xl font-bold mb-2">{customer.name}</h1>
+          <div className="flex justify-between items-start mb-2">
+            <h1 className="text-3xl font-bold">{customer.name}</h1>
+            <Link 
+              href={`/customers/${customer.id}/edit`}
+              className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded text-sm font-medium transition-colors"
+            >
+              Modifica Dati
+            </Link>
+          </div>
           <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
             Registrato il: {new Date(customer.createdAt).toLocaleDateString('it-IT')}
           </span>
@@ -41,11 +50,15 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
                 <p className="bg-gray-50 p-3 rounded border-l-2 border-gray-300">{customer.notes}</p>
               </div>
             )}
+            
+            {/* ECCO IL NUOVO BOTTONE */}
+            <DeleteCustomerButton id={customer.id} name={customer.name} />
+            
           </div>
         </div>
       </div>
 
-      {/* 2. SEZIONE CAPI IN LAVORAZIONE (NUOVA) */}
+      {/* 2. SEZIONE CAPI IN LAVORAZIONE */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Capi in Lavorazione / Ordini</h2>
