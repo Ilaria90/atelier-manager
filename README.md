@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🪡 Atelier Manager
 
-## Getting Started
+Gestionale web per sartorie e laboratori di alta moda: anagrafica clienti, schede misure e ciclo di vita di ogni capo, dal preventivo alla consegna. Nato dall'esperienza diretta in sartoria, per sostituire carta e quaderni con uno strumento semplice e a misura d'atelier.
 
-First, run the development server:
+![Dashboard](docs/screenshots/dashboard.png)
+
+## ✨ Funzionalità
+
+- **Dashboard:** capi in lavorazione ordinati per scadenza, capi in ritardo, pronti per il ritiro e preventivi in attesa.
+- **Rubrica clienti:** contatti, note e capi aperti visibili a colpo d'occhio.
+- **Schede misure:** storico delle rilevazioni (torace, vita, fianchi, spalle, manica, altezza) con data.
+- **Workflow dei capi:** Preventivo → Confermato → In lavorazione → In prova → Rifiniture → Pronto → Consegnato (o Annullato). I capi chiusi passano automaticamente nello storico.
+- **Eliminazione sicura:** un cliente con capi o misure collegati non può essere cancellato, per non perdere lo storico per errore.
+- **Validazione lato server** di tutti i form con Zod.
+
+## 🚀 Tecnologie
+
+- **Frontend:** Next.js (App Router), React, Tailwind CSS, Lucide Icons
+- **Backend:** Next.js Server Actions
+- **Database:** PostgreSQL (Docker), Prisma 7 con driver adapter
+- **Validazione:** Zod
+- **Linguaggio:** TypeScript
+
+## 🛠️ Avvio in locale
+
+Requisiti: Node.js e Docker Desktop.
 
 ```bash
+git clone https://github.com/Ilaria90/atelier-manager.git
+cd atelier-manager
+npm install
+cp .env.example .env
+docker compose up -d
+npx prisma migrate dev
+npx prisma db seed   # dati di esempio
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Apri [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🗺️ Possibili sviluppi
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Ricerca e filtri sui clienti
+- Calendario delle consegne
+- Esportazione PDF della scheda misure
+- Autenticazione e più utenti
