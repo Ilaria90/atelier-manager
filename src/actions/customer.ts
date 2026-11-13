@@ -31,7 +31,7 @@ export async function addCustomer(formData: FormData) {
     return { error: "Dati inseriti non validi." }
   }
 
-  // 4. Se arriviamo qui, i dati sono sicuri al 100% (TypeScript lo sa e ci suggerisce i campi!)
+  // 4. Se arriviamo qui, i dati sono sicuri al 100%
   await db.customer.create({
     data: {
       name: validatedData.data.name,
@@ -55,4 +55,34 @@ export async function getCustomers() {
       },
     },
   })
+}
+
+// AGGIUNGI QUESTA FUNZIONE CHE MANCAVA:
+export async function updateCustomer(id: string, formData: FormData) {
+  const rawData = {
+    name: formData.get("name"),
+    phone: formData.get("phone"),
+    email: formData.get("email"),
+    notes: formData.get("notes"),
+  }
+
+  const validatedData = CustomerSchema.safeParse(rawData)
+
+  if (!validatedData.success) {
+    console.error("Dati non validi:", validatedData.error.flatten())
+    return { error: "Dati inseriti non validi." }
+  }
+
+  await db.customer.update({
+    where: { id },
+    data: {
+      name: validatedData.data.name,
+      phone: validatedData.data.phone || null,
+      email: validatedData.data.email || null,
+      notes: validatedData.data.notes || null,
+    },
+  })
+
+  revalidatePath("/customers")
+  revalidatePath(`/customers/${id}`)
 }
