@@ -1,9 +1,10 @@
-import { getCustomers, addCustomer } from "@/actions/customer"
+import { db } from "@/lib/prisma"
+import { addCustomer } from "@/actions/customer"
 import Link from "next/link"
 import { StatusBadge } from "@/components/StatusBadge"
+import { ActionForm } from "@/components/ActionForm"
 import { Customer, GarmentStatus } from "@prisma/client"
 
-// Tipo esteso che include i capi correlati
 type CustomerWithGarments = Customer & {
   garments: {
     id: string
@@ -14,7 +15,16 @@ type CustomerWithGarments = Customer & {
 }
 
 export default async function CustomersPage() {
-  const customers = (await getCustomers()) as unknown as CustomerWithGarments[]
+  const rawCustomers = await db.customer.findMany({
+    include: {
+      garments: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  const customers = rawCustomers as unknown as CustomerWithGarments[]
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -23,8 +33,7 @@ export default async function CustomersPage() {
       <div className="bg-gray-50 p-6 rounded-lg border mb-8">
         <h2 className="text-lg font-semibold mb-4">Aggiungi Nuovo Cliente</h2>
         
-        {/* Avvolgiamo la action in una funzione anonima per rispettare il tipo atteso da React */}
-        <form action={async (formData) => { "use server"; await addCustomer(formData); }} className="flex flex-col gap-4">
+        <ActionForm action={addCustomer} className="flex flex-col gap-4">
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm text-gray-600 mb-1">Nome e Cognome *</label>
@@ -48,7 +57,7 @@ export default async function CustomersPage() {
           <button type="submit" className="bg-black text-white px-6 py-2 rounded font-medium hover:bg-gray-800 self-end">
             Salva Cliente
           </button>
-        </form>
+        </ActionForm>
       </div>
 
       {customers.length === 0 ? (

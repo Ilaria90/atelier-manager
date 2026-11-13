@@ -14,11 +14,14 @@ export function DeleteCustomerButton({ id, name }: { id: string; name: string })
 
     startTransition(async () => {
       const res = await deleteCustomer(id)
-      if (!res.ok) {
-        setError(res.error ?? "Errore sconosciuto")
+      
+      // Se l'action restituisce un errore, lo mostriamo
+      if (res?.error) {
+        setError(res.error)
       } else {
-        // Se va a buon fine, reindirizziamo alla lista clienti
+        // Altrimenti, successo: reindirizziamo alla lista clienti
         router.push("/customers")
+        router.refresh()
       }
     })
   }
