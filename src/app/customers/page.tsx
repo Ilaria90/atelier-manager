@@ -1,11 +1,20 @@
 import { getCustomers, addCustomer } from "@/actions/customer"
 import Link from "next/link"
 import { StatusBadge } from "@/components/StatusBadge"
+import { Customer, GarmentStatus } from "@prisma/client"
+
+// Tipo esteso che include i capi correlati
+type CustomerWithGarments = Customer & {
+  garments: {
+    id: string
+    title: string
+    status: GarmentStatus
+    dueDate: Date | null
+  }[]
+}
 
 export default async function CustomersPage() {
-  // Chiamiamo il nostro "Service" in modo pulito. 
-  // Ora questa funzione ci porta anche i capi (esclusi quelli consegnati/annullati)!
-  const customers = await getCustomers()
+  const customers = (await getCustomers()) as unknown as CustomerWithGarments[]
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -14,8 +23,8 @@ export default async function CustomersPage() {
       <div className="bg-gray-50 p-6 rounded-lg border mb-8">
         <h2 className="text-lg font-semibold mb-4">Aggiungi Nuovo Cliente</h2>
         
-        {/* Passiamo direttamente la Server Action importata */}
-        <form action={addCustomer} className="flex flex-col gap-4">
+        {/* Avvolgiamo la action in una funzione anonima per rispettare il tipo atteso da React */}
+        <form action={async (formData) => { "use server"; await addCustomer(formData); }} className="flex flex-col gap-4">
           <div className="flex gap-4">
             <div className="flex-1">
               <label className="block text-sm text-gray-600 mb-1">Nome e Cognome *</label>
@@ -31,7 +40,6 @@ export default async function CustomersPage() {
             </div>
           </div>
           
-          {/* Nuovo campo Note */}
           <div>
             <label className="block text-sm text-gray-600 mb-1">Note (Es. conformazione fisica, preferenze di stile)</label>
             <textarea name="notes" rows={2} className="w-full border p-2 rounded resize-none"></textarea>
@@ -55,7 +63,6 @@ export default async function CustomersPage() {
                     {customer.name}
                   </Link>
                 </h3>
-                {/* Aggiunta la stampa formattata della data */}
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                   Cliente dal: {new Date(customer.createdAt).toLocaleDateString('it-IT')}
                 </span>
@@ -65,14 +72,12 @@ export default async function CustomersPage() {
                 Telefono: {customer.phone || "Non inserito"} | Email: {customer.email || "Non inserita"}
               </p>
               
-              {/* Mostriamo le note solo se il cliente ne ha una */}
               {customer.notes && (
                 <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded border-l-2 border-gray-300 mt-2">
                   📝 {customer.notes}
                 </p>
               )}
 
-         {/* ETICHETTE LAVORI IN CORSO */}
               {customer.garments && customer.garments.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-gray-100">
                   <span className="text-xs text-gray-500 font-medium block mb-2">Lavori in corso:</span>
