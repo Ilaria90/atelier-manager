@@ -3,6 +3,7 @@ import Link from "next/link"
 import { addMeasurement } from "@/actions/measurement"
 import { addGarment, updateGarmentStatus } from "@/actions/garment"
 import { DeleteCustomerButton } from "@/components/DeleteCustomerButton"
+import { STATUS_BADGES, CLOSED_STATUSES } from "@/lib/garment-status"
 
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -19,6 +20,10 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   if (!customer) {
     return <div className="p-8">Cliente non trovato nel database.</div>
   }
+
+  // Filtra i capi in base agli stati chiusi centralizzati
+  const activeGarments = customer.garments.filter((g) => !CLOSED_STATUSES.includes(g.status))
+  const historyGarments = customer.garments.filter((g) => CLOSED_STATUSES.includes(g.status))
 
   return (
     <div className="p-8 max-w-5xl mx-auto space-y-12">
@@ -51,14 +56,14 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
               </div>
             )}
             
-            {/* ECCO IL NUOVO BOTTONE */}
+            {/* Bottone di eliminazione */}
             <DeleteCustomerButton id={customer.id} name={customer.name} />
             
           </div>
         </div>
       </div>
 
-      {/* 2. SEZIONE CAPI IN LAVORAZIONE */}
+      {/* 2. SEZIONE CAPI IN LAVORAZIONE E STORICO */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-2xl font-bold text-gray-800">Capi in Lavorazione / Ordini</h2>
@@ -103,21 +108,23 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
             </form>
           </div>
 
-          {/* Lista Capi Esistenti e Cambio Stato */}
+          {/* Liste Capi (Attivi e Storico) */}
           <div className="lg:col-span-2">
-            {customer.garments.length === 0 ? (
+            
+            {/* Sotto-sezione: Capi Attivi */}
+            {activeGarments.length === 0 ? (
               <p className="text-gray-500 bg-white p-4 rounded-lg border border-dashed text-center">
                 Nessun capo in lavorazione per questo cliente.
               </p>
             ) : (
               <ul className="space-y-4">
-                {customer.garments.map((garment) => (
+                {activeGarments.map((garment) => (
                   <li key={garment.id} className="p-5 border rounded-lg shadow-sm bg-white flex flex-col gap-4">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-bold text-lg">{garment.title}</h4>
-                        <span className="text-xs font-semibold px-2 py-1 rounded bg-blue-100 text-blue-800">
-                          {garment.status}
+                        <span className={`text-xs font-semibold px-2 py-1 rounded ${STATUS_BADGES[garment.status].color}`}>
+                          {STATUS_BADGES[garment.status].label}
                         </span>
                       </div>
                       
@@ -144,14 +151,9 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
                           defaultValue={garment.status} 
                           className="border rounded px-3 py-1 text-sm bg-gray-50 focus:ring-black"
                         >
-                          <option value="QUOTE">Preventivo</option>
-                          <option value="CONFIRMED">Confermato / Acconto</option>
-                          <option value="IN_PROGRESS">In Lavorazione</option>
-                          <option value="FITTING">In Prova (Fitting)</option>
-                          <option value="FINISHING">Rifiniture</option>
-                          <option value="READY">Pronto per consegna</option>
-                          <option value="DELIVERED">Consegnato</option>
-                          <option value="CANCELLED">Annullato</option>
+                          {Object.entries(STATUS_BADGES).map(([key, badge]) => (
+                            <option key={key} value={key}>{badge.label}</option>
+                          ))}
                         </select>
                         
                         <button type="submit" className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium px-4 py-1 rounded transition-colors">
@@ -163,6 +165,59 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
                 ))}
               </ul>
             )}
+
+            {/* Sotto-sezione: Storico (Consegnati / Annullati) */}
+            {historyGarments.length > 0 && (
+              <div className="mt-10">
+                <h3 className="font-bold text-lg mb-4 text-gray-600">Storico Capi (Consegnati / Annullati)</h3>
+                <ul className="space-y-4">
+                  {historyGarments.map((garment) => (
+                    <li key={garment.id} className="p-5 border border-gray-200 rounded-lg bg-gray-50 opacity-80 flex flex-col gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h4 className="font-bold text-lg text-gray-700">{garment.title}</h4>
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${STATUS_BADGES[garment.status].color}`}>
+                            {STATUS_BADGES[garment.status].label}
+                          </span>
+                        </div>
+                        
+                        {garment.description && (
+                          <p className="text-sm text-gray-500 mb-3">{garment.description}</p>
+                        )}
+                        
+                        <div className="flex flex-wrap gap-4 text-sm text-gray-500">
+                          {garment.dueDate && <span><strong className="font-medium text-gray-400">Data originaria:</strong> {new Date(garment.dueDate).toLocaleDateString('it-IT')}</span>}
+                        </div>
+                      </div>
+                      
+                      {/* Menu Cambio Stato (Utile per riaprire un lavoro chiuso per sbaglio) */}
+                      <div className="pt-4 border-t border-gray-200">
+                        <form action={updateGarmentStatus} className="flex items-center gap-3">
+                          <input type="hidden" name="garmentId" value={garment.id} />
+                          <input type="hidden" name="customerId" value={customer.id} />
+                          
+                          <label className="text-sm text-gray-500 font-medium">Stato:</label>
+                          <select 
+                            name="status" 
+                            defaultValue={garment.status} 
+                            className="border border-gray-300 rounded px-3 py-1 text-sm bg-white focus:ring-black text-gray-600"
+                          >
+                            {Object.entries(STATUS_BADGES).map(([key, badge]) => (
+                              <option key={key} value={key}>{badge.label}</option>
+                            ))}
+                          </select>
+                          
+                          <button type="submit" className="bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-4 py-1 rounded transition-colors">
+                            Ripristina / Aggiorna
+                          </button>
+                        </form>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
           </div>
         </div>
       </div>

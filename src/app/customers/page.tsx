@@ -1,8 +1,10 @@
 import { getCustomers, addCustomer } from "@/actions/customer"
 import Link from "next/link"
+import { StatusBadge } from "@/components/StatusBadge"
 
 export default async function CustomersPage() {
-  // Chiamiamo il nostro "Service" in modo pulito
+  // Chiamiamo il nostro "Service" in modo pulito. 
+  // Ora questa funzione ci porta anche i capi (esclusi quelli consegnati/annullati)!
   const customers = await getCustomers()
 
   return (
@@ -49,10 +51,10 @@ export default async function CustomersPage() {
             <li key={customer.id} className="p-4 border rounded-lg shadow-sm bg-white">
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-semibold text-lg">
-  <Link href={`/customers/${customer.id}`} className="hover:underline hover:text-blue-600 cursor-pointer">
-    {customer.name}
-  </Link>
-</h3>
+                  <Link href={`/customers/${customer.id}`} className="hover:underline hover:text-blue-600 cursor-pointer">
+                    {customer.name}
+                  </Link>
+                </h3>
                 {/* Aggiunta la stampa formattata della data */}
                 <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
                   Cliente dal: {new Date(customer.createdAt).toLocaleDateString('it-IT')}
@@ -68,6 +70,28 @@ export default async function CustomersPage() {
                 <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded border-l-2 border-gray-300 mt-2">
                   📝 {customer.notes}
                 </p>
+              )}
+
+         {/* ETICHETTE LAVORI IN CORSO */}
+              {customer.garments && customer.garments.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <span className="text-xs text-gray-500 font-medium block mb-2">Lavori in corso:</span>
+                  <ul className="mt-3 space-y-2">
+                    {customer.garments.map((g) => (
+                      <li key={g.id} className="flex items-center justify-between text-sm bg-gray-50 px-3 py-2 rounded border">
+                        <span className="text-gray-700 font-medium">{g.title}</span>
+                        <span className="flex items-center gap-3">
+                          {g.dueDate && (
+                            <span className="text-xs text-gray-500">
+                              {new Date(g.dueDate).toLocaleDateString("it-IT")}
+                            </span>
+                          )}
+                          <StatusBadge status={g.status} />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </li>
           ))}
